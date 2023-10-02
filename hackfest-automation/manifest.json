@@ -1,0 +1,19 @@
+{
+  "name": "hackfest-automation",
+  "id": "1290698772551760940",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": [
+    "figma"
+  ],
+  "networkAccess": {
+    "devAllowedDomains": ["localhost"],
+    "allowedDomains": [
+      "http://localhost:1939"
+    ],
+    "reasoning": "Accessing localhost for development purposes"
+  }
+  
+}
