@@ -1,49 +1,58 @@
-function runPlugin() {
-  const apiURL = "http://localhost:1939/api/certificates";
+//main function that runs at first
+//make sure to have only one component in the page of type COMPONENT  (only work for this!)
+//select only one item and run the plugin 
+async function runPlugin() {
+  //custom api request allowing cros form localhost
+  const apiURL = "http://localhost:1939/api/teams";
+  try {
+    const response = await fetch(apiURL);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.json();
 
-  // Fetch data from the API and pass it to the cloneDocument function
-  fetch(apiURL)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      // Handle the response data from the server
-      console.log("Data from Express server:", data);
-      cloneDocument(data); // Pass the data to the cloneDocument function
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-
-  // Accessing the current page
-  // Make sure to select only one certificate design, not multiple
-  // After selecting the certificate design, run the plugin
-  // Make sure the type of the element is COMPONENT
-  const certificate = figma.currentPage.selection[0];
-  if (certificate.type !== "COMPONENT") {
-    figma.notify(
-      "Make sure to select a design which should be COMPONENT typed"
-    );
+    const certificate = figma.currentPage.selection[0];
+    if (!certificate || certificate.type !== "COMPONENT") {
+      figma.notify("Make sure to select a design which should be COMPONENT typed");
+      figma.closePlugin();
+      return;
+    }
+    //allowing only array from the api response
+    if (Array.isArray(data.data)) {
+      //cloning the document based on the data
+      await cloneDocument(certificate, data.data);
+    } else {
+      console.log(data.data)
+      console.error("Invalid data format. Expected an array.");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  } finally {
     figma.closePlugin();
-    return;
   }
-  // Note: You should not call cloneDocument here; it should be called after fetching the data.
-  // cloneDocument(certificate);
 }
 
-function cloneDocument(parsedData) {
-  // Now you can use the parsedData within this function
-  parsedData.forEach((element) => {
-    // Your logic to clone the component and use parsedData here
-    const clonedCertificate = certificate.clone(); // Assuming certificate is defined in the outer scope
-    const originalXcord = certificate.x;
-    const width = certificate.width;
-    clonedCertificate.x = originalXcord + width + 10;
+async function configDocument(certificate, parsedData) {
+  for (const layer of certificate.children) {
+    if (layer.name == 'TEAMNAME') {
+      const fontName = layer.fontName;
+      //async waiting the text layer to load the font object and applying filter (main async required!!)
+      await figma.loadFontAsync({ family: fontName.family, style: fontName.style });
+      //executes once the font is fully loaded
+      layer.characters = parsedData.Name;
+    }
+  }
+}
+async function cloneDocument(certificate, parsedData) {
+  let originalXcord = certificate.x;
+  for (const element of parsedData) {
+    console.log(element);
+    const clonedCertificate = certificate.clone();
+    //async will edit the document text
+    await configDocument(clonedCertificate, element);
+    clonedCertificate.x = originalXcord + certificate.width + 10;
     figma.currentPage.appendChild(clonedCertificate);
-  });
+    originalXcord = clonedCertificate.x;
+  }
 }
-
 runPlugin();
