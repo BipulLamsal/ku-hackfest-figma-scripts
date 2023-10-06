@@ -92,7 +92,7 @@ async function configDocument(certificate, parsedData) {
 
         if (isSpace === " " || isSpace === "\n" || isSpace === "\t") {
           if (currentWord) {
-            if (currentWord === "[REPLACETEAM]") {
+            if (currentWord === "[REPLACE]") {
               currentWord = parsedData.Team;
             }
             fontStylesPerWord.push({
