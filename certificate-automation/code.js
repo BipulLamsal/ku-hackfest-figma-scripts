@@ -5,49 +5,17 @@ async function runPlugin() {
   //custom api request allowing cros form localhost
   await figma.loadFontAsync({ family: "Poppins", style: "Light" });
   await figma.loadFontAsync({ family: "Poppins", style: "Bold" });
+  await figma.loadFontAsync({ family: "Poppins", style: "Medium" });
+
   const page = figma.currentPage.selection[0];
-  if(page.name==="JUDGE")
-  {
-
-  }
-  else if(page.name==="TEAM")
-  {
-    
-  }
-
-  const apiURL = "http://localhost:1939/api/teams";
-  try {
-    const response = await fetch(apiURL);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    const data = await response.json();
-
-    const certificate = figma.currentPage.selection[0];
-    if (!certificate || certificate.type !== "COMPONENT") {
-      figma.notify(
-        "Make sure to select a design which should be COMPONENT typed"
-      );
-      figma.closePlugin();
-      return;
-    }
-    //allowing only array from the api response
-    if (Array.isArray(data.data)) {
-      //cloning the document based on the data
-      await cloneDocument(certificate, data.data);
-    } else {
-      console.log(data.data);
-      console.error("Invalid data format. Expected an array.");
-    }
-  } catch (error) {
-    console.error("Error:", error);
-  } finally {
-    figma.closePlugin();
+  if (page.name === "JUDGE") {
+    await getAPIrequest("http://localhost:1939/api/judges");
+  } else if (page.name === "TEAM") {
+    await getAPIrequest("http://localhost:1939/api/teams");
   }
 }
 
-async function getAPIrequest(apiURL)
-{
+async function getAPIrequest(apiURL) {
   try {
     const response = await fetch(apiURL);
     if (!response.ok) {
@@ -131,7 +99,6 @@ async function configDocument(certificate, parsedData) {
               word: currentWord,
               fontFamily: currentFontFamily,
               fontWeight: currentFontWeight,
-              fontColor,
             });
             fontStylesPerWord.push({
               word: isSpace,
@@ -164,6 +131,8 @@ async function configDocument(certificate, parsedData) {
         layer.insertCharacters(insertPosition, insertText);
 
         // Set the font style for the inserted word
+        // Color is needed to implemented still
+        // Still Font Weight is not automated!!
         layer.setRangeFontName(insertPosition, insertPosition + wordLength, {
           family: item.fontFamily,
           style: item.fontWeight,
